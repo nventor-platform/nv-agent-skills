@@ -1,0 +1,16 @@
+{
+  "name": "nventor",
+  "owner": {
+    "name": "NVENTOR",
+    "url": "https://nventor.io"
+  },
+  "plugins": [
+    {
+      "name": "nventor",
+      "source": "./",
+      "description": "Prior-art patent search and patent-landscape assessment powered by the NVENTOR API.",
+      "category": "productivity",
+      "tags": ["patents", "prior-art", "patent-search"]
+    }
+  ]
+}

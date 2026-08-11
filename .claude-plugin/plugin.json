@@ -1,0 +1,12 @@
+{
+  "name": "nventor",
+  "displayName": "NVENTOR Patent Tools",
+  "description": "Prior-art patent search and patent-landscape assessment powered by the NVENTOR API. Assess new invention ideas or existing/pending patent applications.",
+  "author": {
+    "name": "NVENTOR",
+    "url": "https://nventor.io"
+  },
+  "homepage": "https://nventor.io",
+  "license": "UNLICENSED",
+  "keywords": ["patents", "prior-art", "patent-search", "nventor"]
+}
