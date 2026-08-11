@@ -14,16 +14,17 @@ The flow has six stages. Do them in order. Stages 1–3 are conversational (one 
 2. Intake     → get the idea — OR an existing patent / pending application (Mode B)
 3. Clarify    → score confidence on 5 aspects, ask targeted questions, confirm refined statement
 4. Bounds     → separate categorical constraints from features
-5. Search     → 1–3 broad Solr queries via POST /api/ifi/search, then read & rank
+5. Search     → 1–3 broad Solr queries via the search_patents MCP tool, then read & rank
 6. Report     → hedged patent-landscape report
 ```
 
 Mode B (existing patent/application) replaces Stage 3 with claim-derived intake and adds a filing-date cutoff plus source-document exclusion — see "Mode B intake" in Stage 2.
 
 Reference files (read when you reach the relevant stage):
-- `references/api.md` — endpoints, auth, request/response shapes, error handling
+- `references/mcp-tools.md` — the NVENTOR patent MCP tools (the primary search interface)
 - `references/query-guide.md` — Solr syntax, field names, worked examples, pitfalls
 - `references/report-format.md` — report template and the mandatory hedged-language rules
+- `references/http-fallback.md` — raw HTTP equivalents, only for sessions without the MCP server
 
 ## Legal posture (applies to everything you say)
 
@@ -31,13 +32,16 @@ You must NEVER state or imply that an idea "is patentable", "is novel", or that 
 
 ## Stage 1 — Setup
 
-Resolve configuration:
-- **Base URL**: `NVENTOR_API_URL` env var if set, else `https://api.nventor.io`. (Local dev: `http://localhost:8080`.)
-- **API key**: `NVENTOR_API_KEY` env var if set; otherwise ask the user for their NVENTOR API key. Never print the key back in any output.
+Check whether the **NVENTOR patent MCP tools** are available in this session: `search_patents`, `lookup_patent`, `fetch_patent_text`, `validate_query` (they may be namespaced by client/connector — match the trailing name; see `references/mcp-tools.md`).
 
-Preflight: `GET {base}/health` (no auth), then `GET {base}/api/ifi/status` with the `X-API-Key` header. If status returns 401/403, the key is wrong — tell the user and stop; retrying other endpoints will fail identically. If IFI shows disconnected, report that the patent data source is unavailable and stop.
+- **Tools present** → you're set; go straight to Stage 2. Authentication is handled by the connector — never ask for or print the API key.
+- **Tools absent** → tell the user how to connect, per their client:
+  - *Claude Code (plugin users)*: the plugin bundles the server config — set the `NVENTOR_API_KEY` environment variable and restart Claude Code (or `/reload-plugins`).
+  - *claude.ai*: Settings → Connectors → Add custom connector → URL `https://api.nventor.io/mcp`, with their API key as an `X-API-Key` request header.
+  - *Codex or other CLIs*: add the same URL + header per that client's MCP configuration.
+  - If the client can't use MCP but can run shell commands, fall back to `references/http-fallback.md` with the `NVENTOR_API_KEY` env var.
 
-Do the preflight silently and only surface problems. If everything is healthy, go straight to Stage 2.
+If a tool call fails with an auth error, the key is wrong — tell the user and stop; retries will fail identically.
 
 ## Stage 2 — Intake
 
@@ -53,10 +57,10 @@ If the description is extremely thin (a phrase like "smart umbrella" with no sub
 
 ### Mode B intake
 
-1. **Resolve the document.** Strip the number to digits and look it up: `POST /api/ifi/search` with `{"q": "pnnum:<digits>", "fl": ["ucid"], "rows": 5}` (no other params needed; this lookup doesn't count against the 3-query search budget). Then fetch the document: `GET /api/ifi/text/{ucid}`. Extract the abstract and the independent claims (per the parsing guidance in `references/api.md`). If the user pasted claims instead of a number, use those directly — do not search for their application; unpublished applications will not be found, and that's expected.
+1. **Resolve the document.** Call `lookup_patent` with the number as given (formatting and kind codes are handled server-side; this doesn't count against the 3-search budget). Then `fetch_patent_text` on the returned UCID to get its abstract and independent claims. If the user pasted claims instead of a number, use those directly — do not search for their application; unpublished applications will not be found, and that's expected.
 2. **Derive the invention statement** from independent claim 1 plus the abstract — a 2–3 sentence third-person statement of what the claimed invention is. **Skip Stage 3 entirely** (the claims are the authoritative description; clarifying questions add nothing). Show the derived statement and get the user's confirmation, same as the Stage 3 checkpoint.
 3. **Ask one question**: the application's **filing or priority date** (they will know it for their own pending applications). Prior art is what predates that date. If they don't know it, proceed without a cutoff but you MUST separate pre- and post-dated results in the report.
-4. **Date-bound every search**: add the cutoff to each Stage 5 query's filter, e.g. `"fq": ["pnctry:US", "pd:[* TO 20240315]"]`. (Publication date is a conservative proxy for the prior-art cutoff; note that in the report.)
+4. **Date-bound every search**: pass the cutoff as `published_before` (YYYYMMDD) on every Stage 5 `search_patents` call. (Publication date is a conservative proxy for the prior-art cutoff; note that in the report.)
 5. **Exclude the source document** from all results: drop any doc whose UCID or `pnnum` matches it, and any hydrated doc with an essentially identical abstract (family members republish the same spec). The API does not expose family IDs in this mode, so identical-abstract matching is your family filter — flag near-identical survivors as "possibly related filings" rather than treating them as independent prior art.
 6. **Report framing**: the deliverable is a prior-art landscape *relative to this application as of its filing date*. It is NOT a prediction of examination outcome, allowance, or validity — never frame it as one, in addition to all the standard hedged-language rules.
 
@@ -103,21 +107,19 @@ Also identify: the technical field, the problem solved, and 2–4 likely CPC cod
 
 ## Stage 5 — Search, read, rank
 
-Read `references/api.md` and `references/query-guide.md` before your first request.
+Read `references/mcp-tools.md` and `references/query-guide.md` before your first search.
 
-**Build the corpus with 1–3 queries — no more.** This limit is absolute: every search costs real money against the patent data provider, and quality comes from reading, not collecting. Construct ONE broad query containing ALL categorical constraints, each as an OR-group of synonyms:
+**Build the corpus with 1–3 `search_patents` calls — no more.** This limit is absolute: every search costs real money against the patent data provider, and quality comes from reading, not collecting. Construct ONE broad query containing ALL categorical constraints, each as an OR-group of synonyms:
 
 ```
 ab_en:(vehicle OR car OR automobile) AND ab_en:(door) AND ab_en:(awning OR canopy OR shade OR cover)
 ```
 
-Every query MUST include every essence concept — a query missing one returns irrelevant results. Use `NOT` for the exclusions from Stage 4. If the first query returns fewer than 20 results, try up to 2 variations (different synonyms, wildcards like `deploy*`, or CPC codes). If `numFound` is huge (thousands), the top relevance-sorted rows are still usable — tighten only if the top results look off-category.
+Every query MUST include every essence concept — a query missing one returns irrelevant results. Use `NOT` for the exclusions from Stage 4. Run doubtful syntax through `validate_query` first (free). If the first search returns fewer than 20 results, try up to 2 variations (different synonyms, wildcards like `deploy*`, or CPC codes). If `num_found` is huge (thousands), the top relevance-sorted rows are still usable — tighten only if the top results look off-category. The server already applies US-only filtering and relevance sort; dedupe across queries by UCID.
 
-Send each query as `POST /api/ifi/search` with the exact body conventions in `references/api.md` — in particular you MUST set `rows` (default is 10), `fq: ["pnctry:US"]`, `sort: ["score desc"]`, and the standard field list. Fetch ~100 rows per query; dedupe across queries by UCID.
+**Hydrate if needed.** If the returned docs carry titles/abstracts, use them directly. If they carry only `ucid` (the result will say so), take the top ~50 deduped UCIDs in relevance order and make **one** `fetch_patent_text` call for all of them; dedupe identical abstracts (patent families) and drop empty ones, and label each patent by UCID plus a short descriptor from its abstract.
 
-**Hydrate if needed.** Check what the search docs contain (see `references/api.md`): if they already carry `ab_en`, use it directly. If they carry only `ucid` (older backend deployments), take the top ~50 deduped UCIDs in relevance order and make **one** `POST /api/ifi/text` call for all of them. The response is large — save it to a file and extract UCID, kind, date, and tag-stripped abstracts with the script pattern in `references/api.md`; never read the raw response. Dedupe identical abstracts and drop empty ones. (In this mode patent titles are unavailable — label each patent by UCID plus a short descriptor you derive from its abstract.)
-
-**Then read.** 50 well-reviewed patents beat 1000 unreviewed. Triage the abstracts, keeping what matches the invention's *essence* even when the implementation differs. Shortlist the ~15–25 most conceptually similar; for the top ~10, extract claim 1 from the already-hydrated `ClaimsData` and read it.
+**Then read.** 50 well-reviewed patents beat 1000 unreviewed. Triage the abstracts, keeping what matches the invention's *essence* even when the implementation differs. Shortlist the ~15–25 most conceptually similar; for the top ~10, read claim 1 (from `fetch_patent_text`, `include_claims` on — one batched call if you haven't fetched them yet).
 
 **Rank the shortlist listwise** by conceptual similarity — same problem solved, same mechanism, same functional domain — NOT keyword overlap. Then annotate each of the top 10–15:
 - **strong** (max 10): overlaps the core concept — record a specific reason citing what the patent covers
@@ -132,7 +134,7 @@ Follow `references/report-format.md` exactly — structure, crowdedness scale, a
 
 ## Budget & conduct rules (recap)
 
-- Max **3** search queries per assessment. Max **2** text-fetch calls (one bulk hydration; one optional follow-up for a specific patent). No exceptions without the user explicitly asking for a deeper search.
-- Never invent patent data. Every UCID, title, and claim you cite must come from an API response in this session.
-- If the API errors, surface the actual error; on 401/403 stop immediately (the key is bad — every retry will fail).
-- Never display the API key.
+- Max **3** `search_patents` calls per assessment. Max **2** `fetch_patent_text` calls (one bulk hydration; one optional follow-up for a specific patent). `lookup_patent` and `validate_query` are free. No exceptions without the user explicitly asking for a deeper search.
+- Never invent patent data. Every UCID, title, and claim you cite must come from a tool result in this session.
+- If a tool errors, surface the actual error; on an auth error stop immediately (the key is bad — every retry will fail).
+- Never display the API key, whether from env vars or configuration.

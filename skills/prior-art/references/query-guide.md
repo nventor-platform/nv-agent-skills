@@ -7,7 +7,7 @@
 | `ucid` | Unique document ID, `US-5551212-A` |
 | `ttl_en` | English title |
 | `ab_en` | English abstract — your primary search & reading substrate |
-| `clms_en` | English claims (fetch via `/api/ifi/text`, not in bulk search `fl`) |
+| `clms_en` | English claims (read via the `fetch_patent_text` tool, not in search queries) |
 | `desc_en` | English description (rarely needed) |
 | `cpc` | CPC classification codes (searchable; `cpci` is rejected by the field registry) |
 | `ic` | IPC classification codes |
@@ -15,7 +15,7 @@
 | `pnctry` | Publication country (`fq: pnctry:US` always) |
 | `pa` | Assignee/applicant name |
 
-There are 178+ fields (`GET /api/ifi/fields`), but the set above covers this workflow. Friendly aliases like `abstract`, `title`, `cpc` are NOT real field names — use the codes above.
+There are 178+ fields in the registry, but the set above covers this workflow. Friendly aliases like `abstract` and `title` are NOT real field names — use the codes above (check doubtful names with the `validate_query` tool).
 
 ## Operators (all supported)
 
@@ -57,8 +57,8 @@ ab_en:(vehicle OR car OR automobile) AND ab_en:(door) AND ab_en:(awning OR canop
 
 ## Calibrating breadth
 
-- `numFound < 20` → too narrow. Spend a second query: widen synonyms, add wildcards, or swap a text constraint for a CPC code (`cpc:E04H15*`).
-- `numFound` in the hundreds → ideal. Top 100 relevance-sorted rows are your corpus.
-- `numFound > ~2500` → very broad; still usable with `sort: score desc`, but if the top rows are off-category, tighten with a NOT clause or an extra constraint.
+- `num_found < 20` → too narrow. Spend a second query: widen synonyms, add wildcards, or swap a text constraint for a CPC code (`cpc:E04H15*`).
+- `num_found` in the hundreds → ideal. Top 100 relevance-sorted rows are your corpus.
+- `num_found > ~2500` → very broad; results are still relevance-sorted and usable, but if the top rows are off-category, tighten with a NOT clause or an extra constraint.
 
 Hard cap: **3 queries total** per assessment. The cap is enforced by discipline, not the server — hold yourself to it.

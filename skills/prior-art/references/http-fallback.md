@@ -1,4 +1,9 @@
-# NVENTOR API reference (client surface)
+# NVENTOR raw HTTP API (fallback only)
+
+**Use the MCP tools (`mcp-tools.md`) when they're available in the session — they wrap all
+of this with correct defaults.** This reference exists for environments where the MCP
+server isn't connected and the client can run curl (Claude Code, Codex CLI). claude.ai
+cannot use this path at all (skill sandboxes have no network access).
 
 Base URL: `NVENTOR_API_URL` env var, else `https://api.nventor.io`. Local dev: `http://localhost:8080`.
 

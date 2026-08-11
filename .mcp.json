@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "patents": {
+      "type": "http",
+      "url": "https://api.nventor.io/mcp",
+      "headers": {
+        "X-API-Key": "${NVENTOR_API_KEY}"
+      }
+    }
+  }
+}
