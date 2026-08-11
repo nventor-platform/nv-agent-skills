@@ -1,6 +1,6 @@
 # NVENTOR Agent Skills
 
-Skills that let your AI agent (Claude Code, claude.ai, Codex CLI, or any [Agent Skills](https://agentskills.io)-compatible tool) run NVENTOR patent workflows against the **NVENTOR patent MCP server** (`https://api.nventor.io/mcp`).
+Skills that let your AI agent (Claude Code, Claude Cowork, claude.ai, Codex CLI, or any [Agent Skills](https://agentskills.io)-compatible tool) run NVENTOR patent workflows against the **NVENTOR patent MCP server** (`https://api.nventor.io/mcp`). ChatGPT support is coming soon.
 
 **Skills:**
 
@@ -30,6 +30,34 @@ The skill triggers automatically on prior-art / patentability requests, or invok
 
 1. Settings → **Connectors** → **Add custom connector** → URL `https://api.nventor.io/mcp`, and add your API key as an `X-API-Key` **request header**. (Header auth for connectors is in beta; if the option isn't visible, ask NVENTOR about access.)
 2. Upload the skill: zip `skills/prior-art/` and add it under Settings → Capabilities (requires code execution enabled).
+
+## Install — Claude Cowork (desktop)
+
+Cowork picks up skills from the Skills folder you've connected to it — no upload or restart needed:
+
+1. Clone this repo (or download it) and copy `skills/prior-art/` into your connected Skills folder. Start a new session and ask a prior-art question — the skill triggers automatically.
+2. Give Cowork the patent tools by adding the MCP server to your Claude Desktop config (`claude_desktop_config.json`), with your API key in the header via the `mcp-remote` bridge:
+
+```json
+{
+  "mcpServers": {
+    "nventor-patents": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://api.nventor.io/mcp",
+               "--header", "X-API-Key:${NVENTOR_API_KEY}"],
+      "env": { "NVENTOR_API_KEY": "nv-your-key-here" }
+    }
+  }
+}
+```
+
+3. Restart the desktop app once after editing the config; the tools then appear in every Cowork session.
+
+This route needs no OAuth and no beta features — it works on any current Claude Desktop/Cowork install.
+
+## ChatGPT — coming soon
+
+ChatGPT support (via its connector system, which speaks the same MCP protocol) is planned. The blocker is OAuth: ChatGPT connectors require an OAuth flow rather than API-key headers, which the NVENTOR API doesn't expose yet. Watch this repo — the same skill and tools will carry over unchanged once it lands.
 
 ## Install — Codex CLI
 
