@@ -43,11 +43,9 @@ Non-negotiable conventions (the server does NOT default these for you):
 - Field names in `q`/`fl` are validated against a registry; an unknown field returns 400 with details.
 - `q` is required; server-side timeout is 30s.
 
-**Two backend modes — check what the docs actually contain.** The service fronts either the hosted IFI index or NVENTOR's self-hosted Solr warehouse, and the difference is visible in the docs array:
-- **Warehouse (Solr) mode**: docs come back with `ttl_en`, `ab_en`, `pd` inline. Use them directly; you only need `/api/ifi/text` for claims on your shortlist.
-- **Hosted-IFI mode** (verified on `dev.api.nventor.io` 2026-08): docs contain **`ucid` only**, regardless of `fl` — the IFI search index doesn't store content fields. You must hydrate via `POST /api/ifi/text` (see below). In this mode **titles are not available at all**; identify patents by UCID and a short label you derive from the abstract.
+**What the docs actually contain — check, don't assume.** As of 2026-08, `/api/ifi/*` routes to the hosted IFI index on **both** dev and prod, and IFI's search index doesn't store content fields: docs contain **`ucid` only**, regardless of `fl` (verified live). You must hydrate via `POST /api/ifi/text` (see below), and **titles are not available at all** — identify patents by UCID and a short label you derive from the abstract.
 
-Always write the adaptive check: if the first doc has `ab_en`, skip hydration for abstracts.
+Still, write the adaptive check: if the first doc comes back with `ab_en`/`ttl_en` inline, the API has been rewired to NVENTOR's Solr warehouse — use those fields directly and skip hydration for abstracts (you'll still want `/api/ifi/text` for claims on your shortlist).
 
 ### Response
 
