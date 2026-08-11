@@ -43,9 +43,10 @@ Non-negotiable conventions (the server does NOT default these for you):
 - Field names in `q`/`fl` are validated against a registry; an unknown field returns 400 with details.
 - `q` is required; server-side timeout is 30s.
 
-**What the docs actually contain — check, don't assume.** As of 2026-08, `/api/ifi/*` routes to the hosted IFI index on **both** dev and prod, and IFI's search index doesn't store content fields: docs contain **`ucid` only**, regardless of `fl` (verified live). You must hydrate via `POST /api/ifi/text` (see below), and **titles are not available at all** — identify patents by UCID and a short label you derive from the abstract.
+**What the docs actually contain — check, don't assume.** Depending on the deployed backend version, search docs either carry the requested fields inline (`ttl_en`, `ab_en`, `pd`) or contain **`ucid` only** (older deployments had a serialization bug that dropped every field but the UCID). Write the adaptive check:
 
-Still, write the adaptive check: if the first doc comes back with `ab_en`/`ttl_en` inline, the API has been rewired to NVENTOR's Solr warehouse — use those fields directly and skip hydration for abstracts (you'll still want `/api/ifi/text` for claims on your shortlist).
+- First doc has `ab_en` → use the inline titles/abstracts directly; you only need `POST /api/ifi/text` for claims on your shortlist.
+- Docs are `ucid`-only → hydrate via `POST /api/ifi/text` (see below); titles are then unavailable — identify patents by UCID and a short label you derive from the abstract.
 
 ### Response
 
@@ -61,7 +62,9 @@ Still, write the adaptive check: if the first doc comes back with `ab_en`/`ttl_e
       "start": 0,
       "maxScore": 17.4,
       "docs": [
-        { "ucid": "US-9162553-B2" }
+        { "ucid": "US-9162553-B2", "ttl_en": ["Shade device for car side window"],
+          "ab_en": "<abstract ...><p>A side window shade device...</p></abstract>",
+          "pd": "20151020" }
       ]
     }
   }
@@ -70,7 +73,7 @@ Still, write the adaptive check: if the first doc comes back with `ab_en`/`ttl_e
 
 Parsing notes:
 - Docs are already in relevance order when you passed `sort: ["score desc"]`.
-- In warehouse mode, Solr multi-valued fields may arrive as **arrays of strings** (`ttl_en`, `ab_en` often do). If a value is an array, join/take the first element.
+- Multi-valued Solr fields arrive as **arrays of strings** (`ttl_en` often does). If a value is an array, join/take the first element. `ab_en` may carry embedded XML tags — strip them.
 - `pd` is a YYYYMMDD integer/string.
 - UCID format is `COUNTRY-NUMBER-KIND`, e.g. `US-9162553-B2`. The kind code tells you grant vs application: **B1/B2 = granted patent; A1/A2 = published application** (may be pending, abandoned, or rejected).
 - Dedupe by UCID across queries; after hydration, also dedupe identical abstracts (patent families republish the same abstract) and drop docs with no abstract.
