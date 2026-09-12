@@ -109,10 +109,10 @@ Also identify: the technical field, the problem solved, and 2–4 likely CPC cod
 
 Read `references/mcp-tools.md` and `references/query-guide.md` before your first search.
 
-**Build the corpus with 1–3 `search_patents` calls — no more.** This limit is absolute: every search costs real money against the patent data provider, and quality comes from reading, not collecting. Construct ONE broad query containing ALL categorical constraints, each as an OR-group of synonyms:
+**Build the corpus with 1–3 `search_patents` calls — no more.** This limit is absolute: every search costs real money against the patent data provider, and quality comes from reading, not collecting. Construct ONE broad query containing ALL categorical constraints, each as an OR-group of synonyms, scoped to `tac` (title + abstract + claims):
 
 ```
-ab_en:(vehicle OR car OR automobile) AND ab_en:(door) AND ab_en:(awning OR canopy OR shade OR cover)
+tac:(vehicle OR car OR automobile) AND tac:(door) AND tac:(awning OR canopy OR shade OR cover)
 ```
 
 Every query MUST include every essence concept — a query missing one returns irrelevant results. Use `NOT` for the exclusions from Stage 4. Run doubtful syntax through `validate_query` first (free). If the first search returns fewer than 20 results, try up to 2 variations (different synonyms, wildcards like `deploy*`, or CPC codes). If `num_found` is huge (thousands), the top relevance-sorted rows are still usable — tighten only if the top results look off-category. The server already applies US-only filtering and relevance sort; dedupe across queries by UCID.

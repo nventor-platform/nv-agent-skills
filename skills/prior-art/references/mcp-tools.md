@@ -15,7 +15,7 @@ relevance sort, standard field list — so you only supply the query itself.
 
 | Input | Meaning |
 |---|---|
-| `query` (required) | Lucene query per `query-guide.md` — ALL essence concepts, OR-grouped synonyms |
+| `query` (required) | Lucene query per `query-guide.md` — ALL essence concepts, OR-grouped synonyms, scoped to `tac` by default (`ab_en` for precision, `text` for recall, `clm_en` for claims only) |
 | `rows` | results to return (default 100, max 500) |
 | `start` | pagination offset |
 | `published_before` | `YYYYMMDD` — prior-art cutoff for Mode B (filters `pd`) |

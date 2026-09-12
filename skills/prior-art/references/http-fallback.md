@@ -30,7 +30,7 @@ Body uses **raw Solr parameter names**:
 
 ```json
 {
-  "q": "ab_en:(vehicle OR car OR automobile) AND ab_en:(door) AND ab_en:(awning OR canopy OR shade OR cover)",
+  "q": "tac:(vehicle OR car OR automobile) AND tac:(door) AND tac:(awning OR canopy OR shade OR cover)",
   "fl": ["ucid", "ttl_en", "ab_en", "cpc", "pd"],
   "rows": 100,
   "start": 0,
