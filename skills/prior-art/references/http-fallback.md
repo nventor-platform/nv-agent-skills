@@ -44,7 +44,7 @@ Non-negotiable conventions (the server does NOT default these for you):
 - **`rows` defaults to 10** if omitted (clamped to max 1000). Always set it explicitly — 100 is the standard corpus fetch.
 - **`fq: ["pnctry:US"]`** — always filter to US publications; that's the product's scope.
 - **`sort: ["score desc"]`** — without it results come back newest-first, not most-relevant-first.
-- **`fl`** — request `ucid, ttl_en, ab_en, cpc, pd` (note: `cpc`, NOT `cpci` — the registry rejects `cpci` with a 400). Do NOT request `clms_en` in bulk searches.
+- **`fl`** — request `ucid, ttl_en, ab_en, cpc, pd` (note: `cpc`, NOT `cpci` — the registry rejects `cpci` with a 400). Do not put `clm_en` (claims) in `fl` — it is searchable in `q` but not stored, so it never comes back in search docs.
 - Field names in `q`/`fl` are validated against a registry; an unknown field returns 400 with details.
 - `q` is required; server-side timeout is 30s.
 

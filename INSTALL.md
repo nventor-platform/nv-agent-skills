@@ -22,10 +22,9 @@ under "What you need from the user" — everything else is yours to do.
 
 ## Getting the repo contents
 
-Clone `https://github.com/nventor-platform/nv-agent-skills.git`. This repo is private: if
-the clone fails with an auth error, ask the user to either provide git credentials with
-access, or download the repo as a zip from GitHub in their browser and give you the file —
-then unzip and continue.
+Clone `https://github.com/nventor-platform/nv-agent-skills.git`. The repo is public, so no
+credentials are needed. If your environment can't run `git`, have the user download the
+repo as a zip from GitHub in their browser and give you the file — then unzip and continue.
 
 ## Claude Code
 

@@ -7,7 +7,7 @@
 | `ucid` | Unique document ID, `US-5551212-A` |
 | `ttl_en` | English title |
 | `ab_en` | English abstract — your primary search & reading substrate |
-| `clms_en` | English claims (read via the `fetch_patent_text` tool, not in search queries) |
+| `clm_en` | English claims — **searchable** (e.g. `clm_en:(awning OR canopy)`), but never returned in search results; read claims via `fetch_patent_text` |
 | `desc_en` | English description (rarely needed) |
 | `cpc` | CPC classification codes (searchable; `cpci` is rejected by the field registry) |
 | `ic` | IPC classification codes |
