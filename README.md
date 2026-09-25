@@ -21,8 +21,11 @@ export NVENTOR_API_KEY=nv-...   # then restart Claude Code
 
 ## What you get
 
-- **`prior-art` skill** — a guided assessment: describe your idea (or point at an existing/pending patent application), answer a couple of clarifying questions, and get a hedged patent-landscape report — similar patents, crowdedness, observed gaps — grounded in live searches of the US patent corpus.
-- **Patent MCP tools** — `search_patents`, `lookup_patent`, `fetch_patent_text`, `validate_query` — available to your agent directly for ad-hoc patent questions outside the guided flow.
+- **`prior-art` skill** — two modes, one report:
+  - **Idea mode**: describe an invention in plain language, answer a couple of clarifying questions, and get a hedged patent-landscape report — similar patents, crowdedness, observed gaps.
+  - **Patent mode**: give a patent/application number or paste your own draft claims; the skill splits claim 1 into elements, applies the prior-art cutoff date, and adds an element-by-element coverage table.
+  Both run faceted searches of the US patent corpus and follow the examiner-citation trail of the closest hits.
+- **Patent MCP tools** — `search_patents`, `lookup_patent`, `fetch_patent_text`, `get_citations`, `validate_query` — available to your agent directly for ad-hoc patent questions outside the guided flow.
 
 ## Coming soon
 
@@ -32,5 +35,5 @@ export NVENTOR_API_KEY=nv-...   # then restart Claude Code
 ## Notes
 
 - Reports use hedged language and are not legal advice, a legal opinion, or a prediction of examination outcome.
-- Searches consume metered patent-data credits; the skill caps itself at 3 searches per assessment.
+- Searches consume metered patent-data credits; the skill caps itself at 3 searches, 2 text fetches, and 2 citation lookups per assessment.
 - Keys are issued per client and revocable by NVENTOR; keep yours out of chats and repos.

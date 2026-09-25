@@ -18,7 +18,7 @@ under "What you need from the user" — everything else is yours to do.
   assessment workflow.
 - The **NVENTOR patent MCP connector** — `https://api.nventor.io/mcp`, authenticated with
   the user's API key via an `X-API-Key` header. It provides the tools `search_patents`,
-  `lookup_patent`, `fetch_patent_text`, and `validate_query` that the skill drives.
+  `lookup_patent`, `fetch_patent_text`, `get_citations`, and `validate_query` that the skill drives.
 
 ## Getting the repo contents
 
@@ -81,7 +81,7 @@ Two pieces: the skill (a folder copy) and the connector (a config edit).
 
 ## Verify
 
-In a fresh session, confirm the install by (a) checking the four patent tools are
+In a fresh session, confirm the install by (a) checking the patent tools are
 available, and (b) asking a prior-art question (e.g. "run a quick prior-art check on a
 collapsible car-door awning") — the skill should trigger and call `search_patents`. An
 auth error means the key is wrong or revoked: have the user re-check it with NVENTOR;

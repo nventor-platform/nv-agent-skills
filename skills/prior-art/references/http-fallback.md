@@ -32,7 +32,7 @@ Body uses **raw Solr parameter names**:
 {
   "q": "tac:(vehicle OR car OR automobile) AND tac:(door) AND tac:(awning OR canopy OR shade OR cover)",
   "fl": ["ucid", "ttl_en", "ab_en", "cpc", "pd"],
-  "rows": 100,
+  "rows": 50,
   "start": 0,
   "fq": ["pnctry:US"],
   "sort": ["score desc"]
@@ -41,7 +41,7 @@ Body uses **raw Solr parameter names**:
 
 Non-negotiable conventions (the server does NOT default these for you):
 
-- **`rows` defaults to 10** if omitted (clamped to max 1000). Always set it explicitly — 100 is the standard corpus fetch.
+- **`rows` defaults to 10** if omitted (clamped to max 1000). Always set it explicitly — 50 per faceted search is standard.
 - **`fq: ["pnctry:US"]`** — always filter to US publications; that's the product's scope.
 - **`sort: ["score desc"]`** — without it results come back newest-first, not most-relevant-first.
 - **`fl`** — request `ucid, ttl_en, ab_en, cpc, pd` (note: `cpc`, NOT `cpci` — the registry rejects `cpci` with a 400). Do not put `clm_en` (claims) in `fl` — it is searchable in `q` but not stored, so it never comes back in search docs.
@@ -85,7 +85,7 @@ Parsing notes:
 
 ### Looking up a specific patent by number
 
-To resolve a publication number to a UCID (Mode B intake), search on `pnnum` with the digits only — no kind code needed, and it works in every backend mode:
+To resolve a publication number to a UCID (Patent mode intake), search on `pnnum` with the digits only — no kind code needed, and it works in every backend mode:
 
 ```json
 { "q": "pnnum:9162553", "fl": ["ucid"], "rows": 5 }
@@ -93,7 +93,7 @@ To resolve a publication number to a UCID (Mode B intake), search on `pnnum` wit
 
 Verified: returns the matching UCID(s) (e.g. `US-9162553-B2`). If multiple kinds come back (A1 application + B2 grant of the same filing), prefer the one the user named, else the grant. Then fetch content via `GET /api/ifi/text/{ucid}`. Note: `fam` (family ID), `ad` (filing date), and `pd` are valid registry fields but are NOT returned in search docs in hosted-IFI mode — filing dates must come from the user, and family exclusion is done by abstract matching.
 
-For date-bounded prior-art searches (Mode B), add the cutoff as a filter query: `"fq": ["pnctry:US", "pd:[* TO 20240315]"]`.
+For date-bounded prior-art searches (Patent mode), add the cutoff as a filter query: `"fq": ["pnctry:US", "pd:[* TO 20240315]"]`.
 
 ### Zero results
 
